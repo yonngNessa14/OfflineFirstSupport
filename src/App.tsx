@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   StatusBar,
   StyleSheet,
@@ -6,16 +6,13 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {getDatabase} from './database/db';
-import {getCompletedActions} from './database/actionRepository';
-import {syncEngine} from './services/syncEngine';
-import {
-  subscribeToNetwork,
-  getNetworkState,
-} from './services/networkListener';
-import {ActionButtons, LogsList} from './components';
-import {Action} from './types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { getDatabase } from '@database/db';
+import { getCompletedActions } from '@database/actionRepository';
+import { syncEngine } from '@services/syncEngine';
+import { subscribeToNetwork, getNetworkState } from '@services/networkListener';
+import { ActionButtons, LogsList } from '@components';
+import { Action } from '@/types';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';

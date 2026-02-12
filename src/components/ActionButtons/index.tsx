@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, TouchableOpacity, Text} from 'react-native';
-import {insertAction} from '../../database/actionRepository';
-import {syncEngine} from '../../services/syncEngine';
+import {insertAction} from '@database/actionRepository';
+import {syncEngine} from '@services/syncEngine';
 import {styles} from './styles';
 
 interface ActionButtonsProps {

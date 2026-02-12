@@ -1,5 +1,5 @@
-import {Action, ActionType} from '../types';
-import {getDatabase} from './db';
+import {Action, ActionType} from '@/types';
+import {getDatabase} from '@database/db';
 
 const generateUUID = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {

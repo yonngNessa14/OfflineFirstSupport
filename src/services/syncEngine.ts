@@ -2,8 +2,8 @@ import {
   getPendingActionsOrdered,
   markAsCompleted,
   incrementRetry,
-} from '../database/actionRepository';
-import { sendAction } from './api';
+} from '@database/actionRepository';
+import { sendAction } from '@services/api';
 
 const MAX_RETRY_COUNT = 5;
 

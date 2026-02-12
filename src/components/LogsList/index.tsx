@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, Text, FlatList} from 'react-native';
-import {Action} from '../../types';
+import {Action} from '@/types';
 import {styles} from './styles';
 
 interface LogsListProps {
