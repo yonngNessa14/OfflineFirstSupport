@@ -103,10 +103,12 @@ describe('actionRepository', () => {
       expect(actions[0].id).toBe('1');
       expect(actions[1].id).toBe('2');
       expect(mockExecuteSql).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE status = 'pending'"),
+        expect.stringContaining('WHERE status = ?'),
+        [ActionStatus.Pending],
       );
       expect(mockExecuteSql).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY priority ASC, created_at ASC'),
+        expect.any(Array),
       );
     });
 
@@ -180,10 +182,12 @@ describe('actionRepository', () => {
 
       expect(actions).toHaveLength(2);
       expect(mockExecuteSql).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE status = 'completed'"),
+        expect.stringContaining('WHERE status = ?'),
+        [ActionStatus.Completed],
       );
       expect(mockExecuteSql).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY synced_at DESC'),
+        expect.any(Array),
       );
     });
   });
@@ -210,6 +214,12 @@ describe('actionRepository', () => {
       expect(actions).toHaveLength(3);
       expect(mockExecuteSql).toHaveBeenCalledWith(
         expect.stringContaining('SELECT * FROM actions'),
+        [
+          ActionStatus.Pending,
+          ActionStatus.Pending,
+          ActionStatus.Pending,
+          ActionStatus.Completed,
+        ],
       );
     });
   });

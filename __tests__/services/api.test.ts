@@ -1,4 +1,5 @@
 import {sendSmall, sendLarge, sendAction} from '@services/api';
+import {ActionType} from '@/types';
 
 describe('API Service', () => {
   beforeEach(() => {
@@ -39,14 +40,14 @@ describe('API Service', () => {
 
   describe('sendAction', () => {
     it('should call sendSmall for small type', async () => {
-      const promise = sendAction('small');
+      const promise = sendAction(ActionType.Small);
 
       jest.advanceTimersByTime(500);
       await expect(promise).resolves.toBeUndefined();
     });
 
     it('should call sendLarge for large type', async () => {
-      const promise = sendAction('large');
+      const promise = sendAction(ActionType.Large);
 
       // Should not resolve at 500ms (small delay)
       jest.advanceTimersByTime(500);

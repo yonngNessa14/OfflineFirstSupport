@@ -1,3 +1,5 @@
+import {ActionType} from '@/types';
+
 const SMALL_DELAY_MS = 500;
 const LARGE_DELAY_MS = 2000;
 
@@ -17,6 +19,6 @@ export const sendLarge = (): Promise<void> => {
   });
 };
 
-export const sendAction = (type: 'small' | 'large'): Promise<void> => {
-  return type === 'small' ? sendSmall() : sendLarge();
+export const sendAction = (type: ActionType): Promise<void> => {
+  return type === ActionType.Small ? sendSmall() : sendLarge();
 };

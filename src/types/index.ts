@@ -28,8 +28,3 @@ export interface Action {
   created_at: number;
   synced_at: number | null;
 }
-
-export interface CreateActionParams {
-  type: ActionType;
-  payload: string;
-}
