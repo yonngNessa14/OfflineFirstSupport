@@ -2,7 +2,7 @@ import React, {useEffect, useState, useCallback} from 'react';
 import {StatusBar, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {getDatabase} from '@database/db';
-import {getCompletedActions} from '@database/actionRepository';
+import {getAllActions} from '@database/actionRepository';
 import {syncEngine} from '@services/syncEngine';
 import {subscribeToNetwork, getNetworkState} from '@services/networkListener';
 import {ActionButtons, LogsList} from '@components';
@@ -13,14 +13,14 @@ function AppContent(): React.JSX.Element {
   const {theme, isDark} = useTheme();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
-  const [completedActions, setCompletedActions] = useState<Action[]>([]);
+  const [allActions, setAllActions] = useState<Action[]>([]);
 
-  const refreshCompletedActions = useCallback(async () => {
+  const refreshActions = useCallback(async () => {
     try {
-      const actions = await getCompletedActions();
-      setCompletedActions(actions);
+      const actions = await getAllActions();
+      setAllActions(actions);
     } catch (error) {
-      console.error('[App] Error fetching completed actions:', error);
+      console.error('[App] Error fetching actions:', error);
     }
   }, []);
 
@@ -35,20 +35,22 @@ function AppContent(): React.JSX.Element {
     syncEngine.setOnline(false);
   }, []);
 
+  const handleSyncComplete = useCallback(() => {
+    refreshActions();
+  }, [refreshActions]);
+
   useEffect(() => {
     const initialize = async () => {
       try {
         await getDatabase();
 
-        syncEngine.setOnSyncComplete(() => {
-          refreshCompletedActions();
-        });
+        syncEngine.setOnSyncComplete(handleSyncComplete);
 
         const initialOnline = await getNetworkState();
         setIsOnline(initialOnline);
         syncEngine.setOnline(initialOnline);
 
-        await refreshCompletedActions();
+        await refreshActions();
 
         setIsInitialized(true);
 
@@ -61,7 +63,7 @@ function AppContent(): React.JSX.Element {
     };
 
     initialize();
-  }, [refreshCompletedActions]);
+  }, [refreshActions, handleSyncComplete]);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -76,10 +78,9 @@ function AppContent(): React.JSX.Element {
   }, [isInitialized, handleOnline, handleOffline]);
 
   const handleActionQueued = useCallback(() => {
-    setTimeout(() => {
-      refreshCompletedActions();
-    }, 100);
-  }, [refreshCompletedActions]);
+    // Refresh immediately to show the new pending action
+    refreshActions();
+  }, [refreshActions]);
 
   return (
     <SafeAreaView
@@ -113,7 +114,7 @@ function AppContent(): React.JSX.Element {
 
         <ActionButtons onActionQueued={handleActionQueued} />
 
-        <LogsList actions={completedActions} isLoading={!isInitialized} />
+        <LogsList actions={allActions} isLoading={!isInitialized} />
       </View>
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-import {Action, ActionType} from '@/types';
+import {Action, ActionType, ActionStatus} from '@/types';
 import {getDatabase} from '@database/db';
 
 const generateUUID = (): string => {
@@ -10,8 +10,9 @@ const generateUUID = (): string => {
   });
 };
 
-const getPriority = (type: ActionType): number => {
-  return type === 'small' ? 1 : 2;
+const ActionPriority: Record<ActionType, number> = {
+  [ActionType.Small]: 1,
+  [ActionType.Large]: 2,
 };
 
 export const insertAction = async (
@@ -24,8 +25,8 @@ export const insertAction = async (
     id: generateUUID(),
     type,
     payload,
-    status: 'pending',
-    priority: getPriority(type),
+    status: ActionStatus.Pending,
+    priority: ActionPriority[type],
     retry_count: 0,
     created_at: Date.now(),
     synced_at: null,
@@ -71,9 +72,9 @@ export const markAsCompleted = async (id: string): Promise<void> => {
 
   await db.executeSql(
     `UPDATE actions 
-     SET status = 'completed', synced_at = ? 
+     SET status = ?, synced_at = ? 
      WHERE id = ?`,
-    [Date.now(), id],
+    [ActionStatus.Completed, Date.now(), id],
   );
 };
 
@@ -95,6 +96,27 @@ export const getCompletedActions = async (): Promise<Action[]> => {
     `SELECT * FROM actions 
      WHERE status = 'completed' 
      ORDER BY synced_at DESC`,
+  );
+
+  const actions: Action[] = [];
+  for (let i = 0; i < results.rows.length; i++) {
+    actions.push(results.rows.item(i) as Action);
+  }
+
+  return actions;
+};
+
+export const getAllActions = async (): Promise<Action[]> => {
+  const db = await getDatabase();
+
+  // Order: pending actions first (by priority, then created_at), then completed (by synced_at desc)
+  const [results] = await db.executeSql(
+    `SELECT * FROM actions 
+     ORDER BY 
+       CASE WHEN status = 'pending' THEN 0 ELSE 1 END,
+       CASE WHEN status = 'pending' THEN priority END ASC,
+       CASE WHEN status = 'pending' THEN created_at END ASC,
+       CASE WHEN status = 'completed' THEN synced_at END DESC`,
   );
 
   const actions: Action[] = [];

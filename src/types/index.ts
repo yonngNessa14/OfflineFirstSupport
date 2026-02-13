@@ -1,5 +1,22 @@
-export type ActionType = 'small' | 'large';
-export type ActionStatus = 'pending' | 'completed';
+export enum ActionType {
+  Small = 'small',
+  Large = 'large',
+}
+
+export enum ActionStatus {
+  Pending = 'pending',
+  Completed = 'completed',
+}
+
+export const ActionTypeLabel: Record<ActionType, string> = {
+  [ActionType.Small]: 'SMALL',
+  [ActionType.Large]: 'LARGE',
+};
+
+export const ActionStatusLabel: Record<ActionStatus, string> = {
+  [ActionStatus.Pending]: 'PENDING',
+  [ActionStatus.Completed]: 'SYNCED',
+};
 
 export interface Action {
   id: string;

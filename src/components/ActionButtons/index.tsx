@@ -3,6 +3,7 @@ import {View, TouchableOpacity, Text} from 'react-native';
 import {insertAction} from '@database/actionRepository';
 import {syncEngine} from '@services/syncEngine';
 import {useTheme} from '@theme';
+import {ActionType} from '@/types';
 import {createStyles} from './styles';
 
 interface ActionButtonsProps {
@@ -17,23 +18,17 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
   const handleSmallPress = async () => {
     const timestamp = new Date().toISOString();
-    await insertAction('small', `Small action at ${timestamp}`);
+    await insertAction(ActionType.Small, `Small action at ${timestamp}`);
 
-    if (onActionQueued) {
-      onActionQueued();
-    }
-
+    onActionQueued?.();
     syncEngine.run();
   };
 
   const handleLargePress = async () => {
     const timestamp = new Date().toISOString();
-    await insertAction('large', `Large action at ${timestamp}`);
+    await insertAction(ActionType.Large, `Large action at ${timestamp}`);
 
-    if (onActionQueued) {
-      onActionQueued();
-    }
-
+    onActionQueued?.();
     syncEngine.run();
   };
 

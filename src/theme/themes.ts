@@ -35,6 +35,14 @@ export interface Theme {
     status: {
       online: string;
       offline: string;
+      pending: {
+        background: string;
+        text: string;
+      };
+      synced: {
+        background: string;
+        text: string;
+      };
     };
     shadow: string;
   };
@@ -75,6 +83,14 @@ export const lightTheme: Theme = {
     status: {
       online: colors.green.main,
       offline: colors.red.main,
+      pending: {
+        background: colors.orange.light,
+        text: colors.orange.dark,
+      },
+      synced: {
+        background: colors.green.light,
+        text: colors.green.dark,
+      },
     },
     shadow: colors.black,
   },
@@ -115,6 +131,14 @@ export const darkTheme: Theme = {
     status: {
       online: colors.green.main,
       offline: colors.red.main,
+      pending: {
+        background: colors.orange.darkBg,
+        text: colors.orange.main,
+      },
+      synced: {
+        background: colors.green.darkBg,
+        text: colors.green.main,
+      },
     },
     shadow: colors.black,
   },

@@ -35,6 +35,13 @@ export const colors = {
     dark: '#D32F2F',
   },
 
+  orange: {
+    light: '#FFF3E0',
+    main: '#FF9800',
+    dark: '#F57C00',
+    darkBg: '#3D2800',
+  },
+
   dark: {
     background: '#121212',
     surface: '#1E1E1E',
