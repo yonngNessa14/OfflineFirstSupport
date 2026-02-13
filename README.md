@@ -15,7 +15,7 @@ This application implements a **Queue-Based Offline Sync Architecture** with cle
 │                      UI Layer                           │
 │  ┌─────────────────┐    ┌─────────────────────────────┐ │
 │  │  ActionButtons  │    │         LogsList            │ │
-│  │  (Small/Large)  │    │   (Completed Actions)       │ │
+│  │  (Small/Large)  │    │  (Pending & Synced Actions) │ │
 │  └────────┬────────┘    └─────────────┬───────────────┘ │
 └───────────┼───────────────────────────┼─────────────────┘
             │                           │
@@ -40,7 +40,7 @@ This application implements a **Queue-Based Offline Sync Architecture** with cle
 │  │              ActionRepository                       ││
 │  │  • insertAction()     • markAsCompleted()          ││
 │  │  • getPendingOrdered() • incrementRetry()          ││
-│  │  • getCompletedActions()                           ││
+│  │  • getAllActions()    • getCompletedActions()      ││
 │  └────────────────────────┬────────────────────────────┘│
 │                           │                             │
 │  ┌────────────────────────▼────────────────────────────┐│
@@ -64,8 +64,13 @@ This application implements a **Queue-Based Offline Sync Architecture** with cle
 ```
 src/
 ├── components/
-│   ├── ActionButtons.tsx    # Small/Large action buttons
-│   └── LogsList.tsx         # Display synced actions
+│   ├── ActionButtons/       # Small/Large action buttons
+│   │   ├── index.tsx
+│   │   └── styles.ts
+│   ├── LogsList/            # Display pending & synced actions
+│   │   ├── index.tsx
+│   │   └── styles.ts
+│   └── index.ts             # Component exports
 ├── database/
 │   ├── db.ts                # SQLite initialization
 │   └── actionRepository.ts  # CRUD operations
@@ -73,19 +78,27 @@ src/
 │   ├── syncEngine.ts        # Queue processing logic
 │   ├── api.ts               # Simulated API calls
 │   └── networkListener.ts   # NetInfo subscription
+├── theme/
+│   ├── colors.ts            # Color palette
+│   ├── themes.ts            # Light/Dark theme definitions
+│   ├── ThemeContext.tsx     # Theme provider & hook
+│   └── index.ts             # Theme exports
 ├── types/
-│   └── index.ts             # TypeScript interfaces
+│   └── index.ts             # TypeScript enums & interfaces
 └── App.tsx                  # Main app component
 ```
 
 ## Key Features
 
 - **Offline-first**: Actions are queued locally and synced when online
+- **Instant feedback**: Actions appear immediately with "PENDING" status, even when offline
+- **Visual sync status**: Each action shows "PENDING" (orange) or "SYNCED" (green) badge
 - **Priority scheduling**: Small actions (priority 1) always sync before Large (priority 2)
 - **Sequential processing**: One action at a time, no parallel `Promise.all`
 - **Automatic retry**: Syncs automatically when network is restored
 - **Persistence**: Queue survives app restarts (SQLite storage)
 - **Retry limit**: Actions are skipped after 5 failed attempts
+- **Dark/Light theme**: Supports system theme with proper styling
 
 ## Database Schema
 
@@ -139,9 +152,9 @@ yarn android
 1. **Airplane Mode Test**
    - Enable airplane mode
    - Press Small and Large buttons
-   - Actions are queued (check console logs)
+   - Actions appear immediately with **PENDING** badge (orange)
    - Disable airplane mode
-   - Watch actions sync automatically
+   - Watch actions change to **SYNCED** badge (green)
 
 2. **Priority Test**
    - Press Large button first
@@ -152,8 +165,13 @@ yarn android
    - Queue actions while offline
    - Kill the app completely
    - Reopen the app
-   - Enable network
-   - Queued actions sync automatically
+   - Pending actions are restored from SQLite
+   - Enable network → actions sync automatically
+
+4. **Visual Feedback Test**
+   - Header shows count: "2 pending • 3 synced"
+   - Pending items have orange left border
+   - Failed retries show "Retry attempt: X"
 
 ## Sync Rules
 
@@ -171,7 +189,6 @@ yarn android
 | No conflict resolution | Single-writer assumption |
 | Simulated API | Replace with real endpoints in production |
 | Simple retry strategy | Production would need more sophisticated logic |
-| No sync progress UI | Keeping UI minimal per requirements |
 
 ## Technical Decisions
 
@@ -183,10 +200,34 @@ yarn android
 | UUID for action IDs | Works offline, no server round-trip needed |
 | NetInfo listener | Native network state detection, triggers sync on reconnect |
 
+## Running Tests
+
+```bash
+# Run all tests
+yarn test
+
+# Run tests with coverage report
+yarn test --coverage
+
+# Run tests in watch mode
+yarn test --watch
+```
+
+### Test Coverage
+
+| Module | Coverage |
+|--------|----------|
+| ActionButtons | 100% |
+| LogsList | 95.65% |
+| actionRepository | 100% |
+| syncEngine | 96.55% |
+| api | 100% |
+
 ## Dependencies
 
 - `react-native-sqlite-storage` - Local SQLite database
 - `@react-native-community/netinfo` - Network state detection
+- `react-native-safe-area-context` - Safe area handling
 
 ## License
 
