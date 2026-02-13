@@ -55,8 +55,9 @@ export const getPendingActionsOrdered = async (): Promise<Action[]> => {
 
   const [results] = await db.executeSql(
     `SELECT * FROM actions 
-     WHERE status = 'pending' 
+     WHERE status = ? 
      ORDER BY priority ASC, created_at ASC`,
+    [ActionStatus.Pending],
   );
 
   const actions: Action[] = [];
@@ -94,8 +95,9 @@ export const getCompletedActions = async (): Promise<Action[]> => {
 
   const [results] = await db.executeSql(
     `SELECT * FROM actions 
-     WHERE status = 'completed' 
+     WHERE status = ? 
      ORDER BY synced_at DESC`,
+    [ActionStatus.Completed],
   );
 
   const actions: Action[] = [];
@@ -113,10 +115,16 @@ export const getAllActions = async (): Promise<Action[]> => {
   const [results] = await db.executeSql(
     `SELECT * FROM actions 
      ORDER BY 
-       CASE WHEN status = 'pending' THEN 0 ELSE 1 END,
-       CASE WHEN status = 'pending' THEN priority END ASC,
-       CASE WHEN status = 'pending' THEN created_at END ASC,
-       CASE WHEN status = 'completed' THEN synced_at END DESC`,
+       CASE WHEN status = ? THEN 0 ELSE 1 END,
+       CASE WHEN status = ? THEN priority END ASC,
+       CASE WHEN status = ? THEN created_at END ASC,
+       CASE WHEN status = ? THEN synced_at END DESC`,
+    [
+      ActionStatus.Pending,
+      ActionStatus.Pending,
+      ActionStatus.Pending,
+      ActionStatus.Completed,
+    ],
   );
 
   const actions: Action[] = [];
