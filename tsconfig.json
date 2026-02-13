@@ -11,6 +11,8 @@
       "@database/*": ["src/database/*"],
       "@services": ["src/services"],
       "@services/*": ["src/services/*"],
+      "@theme": ["src/theme"],
+      "@theme/*": ["src/theme/*"],
       "@types": ["src/types"],
       "@types/*": ["src/types/*"]
     }

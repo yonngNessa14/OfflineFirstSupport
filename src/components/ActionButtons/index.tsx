@@ -1,8 +1,9 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View, TouchableOpacity, Text} from 'react-native';
 import {insertAction} from '@database/actionRepository';
 import {syncEngine} from '@services/syncEngine';
-import {styles} from './styles';
+import {useTheme} from '@theme';
+import {createStyles} from './styles';
 
 interface ActionButtonsProps {
   onActionQueued?: () => void;
@@ -11,6 +12,9 @@ interface ActionButtonsProps {
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onActionQueued,
 }) => {
+  const {theme} = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const handleSmallPress = async () => {
     const timestamp = new Date().toISOString();
     await insertAction('small', `Small action at ${timestamp}`);

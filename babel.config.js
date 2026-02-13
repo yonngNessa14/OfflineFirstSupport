@@ -10,6 +10,7 @@ module.exports = {
           '@components': './src/components',
           '@database': './src/database',
           '@services': './src/services',
+          '@theme': './src/theme',
           '@types': './src/types',
         },
       },

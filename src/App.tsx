@@ -1,21 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { getDatabase } from '@database/db';
-import { getCompletedActions } from '@database/actionRepository';
-import { syncEngine } from '@services/syncEngine';
-import { subscribeToNetwork, getNetworkState } from '@services/networkListener';
-import { ActionButtons, LogsList } from '@components';
-import { Action } from '@/types';
+import React, {useEffect, useState, useCallback} from 'react';
+import {StatusBar, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {getDatabase} from '@database/db';
+import {getCompletedActions} from '@database/actionRepository';
+import {syncEngine} from '@services/syncEngine';
+import {subscribeToNetwork, getNetworkState} from '@services/networkListener';
+import {ActionButtons, LogsList} from '@components';
+import {ThemeProvider, useTheme} from '@theme';
+import {Action} from '@/types';
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+function AppContent(): React.JSX.Element {
+  const {theme, isDark} = useTheme();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [completedActions, setCompletedActions] = useState<Action[]>([]);
@@ -86,30 +81,31 @@ function App(): React.JSX.Element {
     }, 100);
   }, [refreshCompletedActions]);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#1a1a1a' : '#f5f5f5',
-    flex: 1,
-  };
-
   return (
-    <SafeAreaView style={backgroundStyle}>
+    <SafeAreaView
+      style={[styles.safeArea, {backgroundColor: theme.colors.background}]}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.colors.background}
       />
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={[styles.title, isDarkMode && styles.textLight]}>
+          <Text style={[styles.title, {color: theme.colors.text.primary}]}>
             Offline Sync Demo
           </Text>
           <View style={styles.statusContainer}>
             <View
               style={[
                 styles.statusDot,
-                isOnline ? styles.statusOnline : styles.statusOffline,
+                {
+                  backgroundColor: isOnline
+                    ? theme.colors.status.online
+                    : theme.colors.status.offline,
+                },
               ]}
             />
-            <Text style={[styles.statusText, isDarkMode && styles.textLight]}>
+            <Text
+              style={[styles.statusText, {color: theme.colors.text.secondary}]}>
               {isOnline ? 'Online' : 'Offline'}
             </Text>
           </View>
@@ -123,7 +119,18 @@ function App(): React.JSX.Element {
   );
 }
 
+function App(): React.JSX.Element {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
@@ -137,10 +144,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-  },
-  textLight: {
-    color: '#fff',
   },
   statusContainer: {
     flexDirection: 'row',
@@ -152,15 +155,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 6,
   },
-  statusOnline: {
-    backgroundColor: '#4CAF50',
-  },
-  statusOffline: {
-    backgroundColor: '#F44336',
-  },
   statusText: {
     fontSize: 14,
-    color: '#666',
   },
 });
 

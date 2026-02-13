@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View, Text, FlatList} from 'react-native';
 import {Action} from '@/types';
-import {styles} from './styles';
+import {useTheme} from '@theme';
+import {createStyles} from './styles';
 
 interface LogsListProps {
   actions: Action[];
@@ -12,6 +13,9 @@ export const LogsList: React.FC<LogsListProps> = ({
   actions,
   isLoading = false,
 }) => {
+  const {theme} = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const formatTimestamp = (timestamp: number | null): string => {
     if (!timestamp) {
       return 'Not synced';
@@ -27,7 +31,15 @@ export const LogsList: React.FC<LogsListProps> = ({
             styles.typeBadge,
             item.type === 'small' ? styles.smallBadge : styles.largeBadge,
           ]}>
-          <Text style={styles.typeBadgeText}>{item.type.toUpperCase()}</Text>
+          <Text
+            style={[
+              styles.typeBadgeText,
+              item.type === 'small'
+                ? styles.smallBadgeText
+                : styles.largeBadgeText,
+            ]}>
+            {item.type.toUpperCase()}
+          </Text>
         </View>
         <Text style={styles.timestamp}>{formatTimestamp(item.synced_at)}</Text>
       </View>
