@@ -1,9 +1,7 @@
-import SQLite, {
-  SQLiteDatabase,
-  enablePromise,
-} from 'react-native-sqlite-storage';
+import SQLite, { SQLiteDatabase } from 'react-native-sqlite-storage';
 
-enablePromise(true);
+SQLite.DEBUG(true);
+SQLite.enablePromise(true);
 
 const DATABASE_NAME = 'OfflineSyncDB.db';
 
