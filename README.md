@@ -1,7 +1,6 @@
 # Offline-First Queue-Based Sync Demo
 
 ![Tests](https://github.com/yonngNessa14/OfflineFirstSupport/actions/workflows/test.yml/badge.svg)
-[![codecov](https://codecov.io/gh/yonngNessa14/OfflineFirstSupport/branch/main/graph/badge.svg)](https://codecov.io/gh/yonngNessa14/OfflineFirstSupport)
 
 A React Native CLI application demonstrating an offline-first architecture with queue-based synchronization, priority scheduling, and automatic retry on network restoration.
 
