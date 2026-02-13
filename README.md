@@ -1,97 +1,234 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Offline-First Queue-Based Sync Demo
 
-# Getting Started
+![Tests](https://github.com/yonngNessa14/OfflineFirstSupport/actions/workflows/test.yml/badge.svg)
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+A React Native CLI application demonstrating an offline-first architecture with queue-based synchronization, priority scheduling, and automatic retry on network restoration.
 
-## Step 1: Start Metro
+## Architecture
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+This application implements a **Queue-Based Offline Sync Architecture** with clear separation of concerns across multiple layers.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### Architecture Diagram
 
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```
+┌─────────────────────────────────────────────────────────┐
+│                      UI Layer                           │
+│  ┌─────────────────┐    ┌─────────────────────────────┐ │
+│  │  ActionButtons  │    │         LogsList            │ │
+│  │  (Small/Large)  │    │  (Pending & Synced Actions) │ │
+│  └────────┬────────┘    └─────────────┬───────────────┘ │
+└───────────┼───────────────────────────┼─────────────────┘
+            │                           │
+            ▼                           │
+┌─────────────────────────────────────────────────────────┐
+│                   Service Layer                         │
+│  ┌─────────────────┐    ┌─────────────────────────────┐ │
+│  │   SyncEngine    │◄───│     NetworkListener         │ │
+│  │  (Sequential    │    │   (NetInfo Events)          │ │
+│  │   Processing)   │    └─────────────────────────────┘ │
+│  └────────┬────────┘                                    │
+│           │            ┌─────────────────────────────┐  │
+│           └───────────►│      API Simulator          │  │
+│                        │   (500ms/2000ms delays)     │  │
+│                        └─────────────────────────────┘  │
+└───────────┼─────────────────────────────────────────────┘
+            │
+            ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Data Layer                           │
+│  ┌─────────────────────────────────────────────────────┐│
+│  │              ActionRepository                       ││
+│  │  • insertAction()     • markAsCompleted()          ││
+│  │  • getPendingOrdered() • incrementRetry()          ││
+│  │  • getAllActions()    • getCompletedActions()      ││
+│  └────────────────────────┬────────────────────────────┘│
+│                           │                             │
+│  ┌────────────────────────▼────────────────────────────┐│
+│  │              SQLite Database                        ││
+│  │         (react-native-sqlite-storage)              ││
+│  └─────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────┘
 ```
 
-## Step 2: Build and run your app
+### Data Flow
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+1. **User presses button** → Action inserted into SQLite with priority
+2. **SyncEngine.run()** → Fetches pending actions ordered by priority
+3. **Sequential processing** → Each action sent to API one at a time
+4. **On success** → Action marked as completed with timestamp
+5. **On failure** → Retry count incremented, processing stops
+6. **Network restored** → SyncEngine automatically triggered
 
-### Android
+## Project Structure
 
-```sh
-# Using npm
-npm run android
+```
+src/
+├── components/
+│   ├── ActionButtons/       # Small/Large action buttons
+│   │   ├── index.tsx
+│   │   └── styles.ts
+│   ├── LogsList/            # Display pending & synced actions
+│   │   ├── index.tsx
+│   │   └── styles.ts
+│   └── index.ts             # Component exports
+├── database/
+│   ├── db.ts                # SQLite initialization
+│   └── actionRepository.ts  # CRUD operations
+├── services/
+│   ├── syncEngine.ts        # Queue processing logic
+│   ├── api.ts               # Simulated API calls
+│   └── networkListener.ts   # NetInfo subscription
+├── theme/
+│   ├── colors.ts            # Color palette
+│   ├── themes.ts            # Light/Dark theme definitions
+│   ├── ThemeContext.tsx     # Theme provider & hook
+│   └── index.ts             # Theme exports
+├── types/
+│   └── index.ts             # TypeScript enums & interfaces
+└── App.tsx                  # Main app component
+```
 
-# OR using Yarn
+## Key Features
+
+- **Offline-first**: Actions are queued locally and synced when online
+- **Instant feedback**: Actions appear immediately with "PENDING" status, even when offline
+- **Visual sync status**: Each action shows "PENDING" (orange) or "SYNCED" (green) badge
+- **Priority scheduling**: Small actions (priority 1) always sync before Large (priority 2)
+- **Sequential processing**: One action at a time, no parallel `Promise.all`
+- **Automatic retry**: Syncs automatically when network is restored
+- **Persistence**: Queue survives app restarts (SQLite storage)
+- **Retry limit**: Actions are skipped after 5 failed attempts
+- **Dark/Light theme**: Supports system theme with proper styling
+
+## Database Schema
+
+```sql
+CREATE TABLE actions (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,           -- 'small' or 'large'
+  payload TEXT NOT NULL,
+  status TEXT DEFAULT 'pending', -- 'pending' or 'completed'
+  priority INTEGER NOT NULL,     -- 1 (small) or 2 (large)
+  retry_count INTEGER DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  synced_at INTEGER
+);
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js >= 22.11.0
+- Yarn
+- Xcode (for iOS)
+- Android Studio (for Android)
+
+### Installation
+
+```bash
+# Install dependencies
+yarn install
+
+# Install iOS pods
+cd ios && pod install && cd ..
+```
+
+### Running the App
+
+```bash
+# Start Metro bundler
+yarn start
+
+# Run on iOS
+yarn ios
+
+# Run on Android
 yarn android
 ```
 
-### iOS
+## Testing Offline Behavior
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+1. **Airplane Mode Test**
+   - Enable airplane mode
+   - Press Small and Large buttons
+   - Actions appear immediately with **PENDING** badge (orange)
+   - Disable airplane mode
+   - Watch actions change to **SYNCED** badge (green)
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+2. **Priority Test**
+   - Press Large button first
+   - Press Small button second
+   - Small action syncs before Large (despite queue order)
 
-```sh
-bundle install
+3. **Restart Test**
+   - Queue actions while offline
+   - Kill the app completely
+   - Reopen the app
+   - Pending actions are restored from SQLite
+   - Enable network → actions sync automatically
+
+4. **Visual Feedback Test**
+   - Header shows count: "2 pending • 3 synced"
+   - Pending items have orange left border
+   - Failed retries show "Retry attempt: X"
+
+## Sync Rules
+
+1. **Small before Large**: All pending small actions must complete before any large action starts
+2. **Stop on failure**: If an action fails, processing stops immediately
+3. **Retry limit**: Actions with 5+ failures are skipped
+4. **No parallel sync**: Only one sync operation runs at a time
+
+## Trade-offs & Limitations
+
+| Limitation | Reason |
+|------------|--------|
+| No background sync when app is killed | React Native limitation without native modules |
+| No exponential backoff | Simplified for demo purposes |
+| No conflict resolution | Single-writer assumption |
+| Simulated API | Replace with real endpoints in production |
+| Simple retry strategy | Production would need more sophisticated logic |
+
+## Technical Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Singleton SyncEngine | Prevents multiple sync processes, ensures sequential order |
+| Priority stored in DB | Allows correct ordering at query level, persists across restarts |
+| Sequential for-loop | Explicit control flow, easy to debug, clear stop-on-failure |
+| UUID for action IDs | Works offline, no server round-trip needed |
+| NetInfo listener | Native network state detection, triggers sync on reconnect |
+
+## Running Tests
+
+```bash
+# Run all tests
+yarn test
+
+# Run tests with coverage report
+yarn test --coverage
+
+# Run tests in watch mode
+yarn test --watch
 ```
 
-Then, and every time you update your native dependencies, run:
+### Test Coverage
 
-```sh
-bundle exec pod install
-```
+| Module | Coverage |
+|--------|----------|
+| ActionButtons | 100% |
+| LogsList | 95.65% |
+| actionRepository | 100% |
+| syncEngine | 96.55% |
+| api | 100% |
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## Dependencies
 
-```sh
-# Using npm
-npm run ios
+- `react-native-sqlite-storage` - Local SQLite database
+- `@react-native-community/netinfo` - Network state detection
+- `react-native-safe-area-context` - Safe area handling
 
-# OR using Yarn
-yarn ios
-```
+## License
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+MIT
