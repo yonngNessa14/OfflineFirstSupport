@@ -1,8 +1,8 @@
 import React from 'react';
-import {render, screen} from '@testing-library/react-native';
-import {LogsList} from '@components';
-import {Action, ActionType, ActionStatus} from '@/types';
-import {ThemeProvider} from '@theme';
+import { render, screen } from '@testing-library/react-native';
+import { LogsList } from '@components';
+import { Action, ActionType, ActionStatus } from '@/types';
+import { ThemeProvider } from '@theme';
 
 const renderWithTheme = (component: React.ReactElement) => {
   return render(<ThemeProvider>{component}</ThemeProvider>);
@@ -111,8 +111,8 @@ describe('LogsList', () => {
   describe('Count display', () => {
     it('should show pending count when there are pending actions', () => {
       const actions = [
-        createMockAction({id: '1', status: ActionStatus.Pending}),
-        createMockAction({id: '2', status: ActionStatus.Pending}),
+        createMockAction({ id: '1', status: ActionStatus.Pending }),
+        createMockAction({ id: '2', status: ActionStatus.Pending }),
       ];
 
       renderWithTheme(<LogsList actions={actions} />);
@@ -146,7 +146,7 @@ describe('LogsList', () => {
 
     it('should show both counts when there are pending and completed actions', () => {
       const actions = [
-        createMockAction({id: '1', status: ActionStatus.Pending}),
+        createMockAction({ id: '1', status: ActionStatus.Pending }),
         createMockAction({
           id: '2',
           status: ActionStatus.Completed,
@@ -171,9 +171,9 @@ describe('LogsList', () => {
   describe('Multiple actions', () => {
     it('should render all actions in the list', () => {
       const actions = [
-        createMockAction({id: '1', payload: 'First action'}),
-        createMockAction({id: '2', payload: 'Second action'}),
-        createMockAction({id: '3', payload: 'Third action'}),
+        createMockAction({ id: '1', payload: 'First action' }),
+        createMockAction({ id: '2', payload: 'Second action' }),
+        createMockAction({ id: '3', payload: 'Third action' }),
       ];
 
       renderWithTheme(<LogsList actions={actions} />);
@@ -181,6 +181,38 @@ describe('LogsList', () => {
       expect(screen.getByText('First action')).toBeTruthy();
       expect(screen.getByText('Second action')).toBeTruthy();
       expect(screen.getByText('Third action')).toBeTruthy();
+    });
+  });
+
+  describe('Pull to refresh', () => {
+    it('should call onRefresh when pull to refresh is triggered', () => {
+      const onRefresh = jest.fn();
+      const actions = [createMockAction({ id: '1' })];
+
+      const { getByTestId } = renderWithTheme(
+        <LogsList
+          actions={actions}
+          onRefresh={onRefresh}
+          isRefreshing={false}
+        />,
+      );
+
+      const flatList = getByTestId('actions-list');
+      const { refreshControl } = flatList.props;
+
+      // Simulate refresh
+      refreshControl.props.onRefresh();
+
+      expect(onRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not render refresh control when onRefresh is not provided', () => {
+      const actions = [createMockAction({ id: '1' })];
+
+      const { getByTestId } = renderWithTheme(<LogsList actions={actions} />);
+
+      const flatList = getByTestId('actions-list');
+      expect(flatList.props.refreshControl).toBeUndefined();
     });
   });
 });

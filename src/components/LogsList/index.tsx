@@ -1,5 +1,5 @@
 import React, {useMemo, Fragment} from 'react';
-import {View, Text, FlatList} from 'react-native';
+import {View, Text, FlatList, RefreshControl} from 'react-native';
 import {
   Action,
   ActionType,
@@ -13,11 +13,15 @@ import {createStyles} from './styles';
 interface LogsListProps {
   actions: Action[];
   isLoading?: boolean;
+  isRefreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 export const LogsList: React.FC<LogsListProps> = ({
   actions,
   isLoading = false,
+  isRefreshing = false,
+  onRefresh,
 }) => {
   const {theme} = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -120,6 +124,7 @@ export const LogsList: React.FC<LogsListProps> = ({
         )}
       </View>
       <FlatList
+        testID="actions-list"
         data={actions}
         renderItem={renderItem}
         keyExtractor={item => item.id}
@@ -128,6 +133,16 @@ export const LogsList: React.FC<LogsListProps> = ({
           actions.length === 0 ? styles.emptyList : styles.list
         }
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.text.secondary}
+              colors={[theme.colors.status.online]}
+            />
+          ) : undefined
+        }
       />
     </View>
   );
