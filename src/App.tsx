@@ -1,18 +1,19 @@
-import React, {useEffect, useState, useCallback} from 'react';
-import {StatusBar, StyleSheet, Text, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {getDatabase} from '@database/db';
-import {getAllActions} from '@database/actionRepository';
-import {syncEngine} from '@services/syncEngine';
-import {subscribeToNetwork, getNetworkState} from '@services/networkListener';
-import {ActionButtons, LogsList} from '@components';
-import {ThemeProvider, useTheme} from '@theme';
-import {Action} from '@/types';
+import React, { useEffect, useState, useCallback } from 'react';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { getDatabase } from '@database/db';
+import { getAllActions } from '@database/actionRepository';
+import { syncEngine } from '@services/syncEngine';
+import { subscribeToNetwork, getNetworkState } from '@services/networkListener';
+import { ActionButtons, LogsList } from '@components';
+import { ThemeProvider, useTheme } from '@theme';
+import { Action } from '@/types';
 
 function AppContent(): React.JSX.Element {
-  const {theme, isDark} = useTheme();
+  const { theme, isDark } = useTheme();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [allActions, setAllActions] = useState<Action[]>([]);
 
   const refreshActions = useCallback(async () => {
@@ -82,16 +83,28 @@ function AppContent(): React.JSX.Element {
     refreshActions();
   }, [refreshActions]);
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refreshActions();
+    // Also trigger sync if online
+    if (isOnline) {
+      syncEngine.run();
+    }
+    setIsRefreshing(false);
+  }, [refreshActions, isOnline]);
+
   return (
     <SafeAreaView
-      style={[styles.safeArea, {backgroundColor: theme.colors.background}]}>
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+      edges={['top', 'bottom']}
+    >
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={theme.colors.background}
       />
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={[styles.title, {color: theme.colors.text.primary}]}>
+          <Text style={[styles.title, { color: theme.colors.text.primary }]}>
             Offline Sync Demo
           </Text>
           <View style={styles.statusContainer}>
@@ -106,7 +119,11 @@ function AppContent(): React.JSX.Element {
               ]}
             />
             <Text
-              style={[styles.statusText, {color: theme.colors.text.secondary}]}>
+              style={[
+                styles.statusText,
+                { color: theme.colors.text.secondary },
+              ]}
+            >
               {isOnline ? 'Online' : 'Offline'}
             </Text>
           </View>
@@ -114,7 +131,12 @@ function AppContent(): React.JSX.Element {
 
         <ActionButtons onActionQueued={handleActionQueued} />
 
-        <LogsList actions={allActions} isLoading={!isInitialized} />
+        <LogsList
+          actions={allActions}
+          isLoading={!isInitialized}
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefresh}
+        />
       </View>
     </SafeAreaView>
   );
